@@ -1,0 +1,6 @@
+# Windows Tool Box 测试版依赖
+# 安装：pip install -r requirements.txt
+psutil>=5.9.0          # 系统资源采集（CPU/内存/磁盘/网络/进程）
+wmi>=1.5.1             # WMI 查询封装（硬件型号）
+pywin32>=306           # wmi 的底层 COM 依赖
+GPUtil>=1.4.0          # 可选：NVIDIA GPU 利用率/显存

@@ -1,0 +1,121 @@
+<html style="margin:0;padding:0;">
+<div style="background-color:transparent;box-sizing:border-box;--accent:#2E7DA6;font-family:'Roboto','PingFang SC','Segoe UI',Arial,sans-serif;color:#1A1B1C;line-height:1.5;">
+
+  <!-- 主标题 -->
+  <div style="font-size:16px;font-weight:600;margin:0 0 4px;">Windows Tool Box · 总体架构 + 第一步实现</div>
+  <div style="font-size:12px;color:#6B7280;margin-bottom:14px;">示意图：分层模块化架构 与「硬件检测 + 系统资源检测」数据流</div>
+
+  <!-- A. 分层架构 -->
+  <div style="border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:12px 14px;background:rgba(0,0,0,0.02);">
+    <div style="font-size:12px;font-weight:600;color:#2E7DA6;margin-bottom:8px;">A · 分层架构（从界面到内核）</div>
+
+    <!-- 层1 UI -->
+    <div style="border:1px solid rgba(46,125,166,0.35);border-left:4px solid #2E7DA6;border-radius:8px;padding:8px 10px;background:#fff;">
+      <div style="font-size:12px;font-weight:600;">① UI 展示层（WPF/WinUI）</div>
+      <div style="font-size:12px;color:#6B7280;">硬件信息卡片 · 实时仪表盘 · 趋势曲线 · 进程/服务列表</div>
+    </div>
+    <div style="text-align:center;color:#2E7DA6;font-size:13px;line-height:1;margin:2px 0;">↓</div>
+
+    <!-- 层2 服务 -->
+    <div style="border:1px solid rgba(46,125,166,0.35);border-left:4px solid #2E7DA6;border-radius:8px;padding:8px 10px;background:#fff;">
+      <div style="font-size:12px;font-weight:600;">② 服务/调度层（核心）</div>
+      <div style="font-size:12px;color:#6B7280;">硬件检测服务(低频) · 资源监控服务(1s 轮询) · 环形缓冲 · 通知/告警</div>
+    </div>
+    <div style="text-align:center;color:#2E7DA6;font-size:13px;line-height:1;margin:2px 0;">↓</div>
+
+    <!-- 层3 采集 -->
+    <div style="border:1px solid rgba(46,125,166,0.35);border-left:4px solid #2E7DA6;border-radius:8px;padding:8px 10px;background:#fff;">
+      <div style="font-size:12px;font-weight:600;">③ 采集适配层（多数据源封装）</div>
+      <div style="font-size:12px;color:#6B7280;">WMI 查询 · 原生 API(P/Invoke) · 传感器库(LibreHardwareMonitor) · PDH 性能计数器</div>
+    </div>
+    <div style="text-align:center;color:#2E7DA6;font-size:13px;line-height:1;margin:2px 0;">↓</div>
+
+    <!-- 层4 基础设施 -->
+    <div style="border:1px solid rgba(46,125,166,0.35);border-left:4px solid #2E7DA6;border-radius:8px;padding:8px 10px;background:#fff;">
+      <div style="font-size:12px;font-weight:600;">④ 基础设施层（横切）</div>
+      <div style="font-size:12px;color:#6B7280;">配置管理 · 日志 · 异常处理 · 权限提权 · 单例启动</div>
+    </div>
+  </div>
+
+  <!-- B. 第一步数据流 -->
+  <div style="border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:12px 14px;background:rgba(0,0,0,0.02);margin-top:12px;">
+    <div style="font-size:12px;font-weight:600;color:#2E7DA6;margin-bottom:8px;">B · 第一步数据流</div>
+
+    <!-- 硬件检测 -->
+    <div style="font-size:12px;font-weight:600;margin-bottom:4px;">阶段 1 · 硬件型号检测（启动时查询一次，可手动刷新）</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+      <div style="flex:1 1 130px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:6px 8px;background:#fff;font-size:11px;color:#6B7280;">触发：App 启动 / 手动刷新</div>
+      <div style="color:#2E7DA6;font-size:12px;">→</div>
+      <div style="flex:1 1 130px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:6px 8px;background:#fff;font-size:11px;color:#6B7280;">采集：WMI / 注册表 / cpuid</div>
+      <div style="color:#2E7DA6;font-size:12px;">→</div>
+      <div style="flex:1 1 130px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:6px 8px;background:#fff;font-size:11px;color:#6B7280;">建模：HardwareInfo 对象</div>
+      <div style="color:#2E7DA6;font-size:12px;">→</div>
+      <div style="flex:1 1 130px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:6px 8px;background:#fff;font-size:11px;color:#6B7280;">UI 绑定显示</div>
+    </div>
+
+    <!-- 资源监控 -->
+    <div style="font-size:12px;font-weight:600;margin:12px 0 4px;">阶段 2 · 资源实时监控（后台线程每 1 秒轮询）</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+      <div style="flex:1 1 130px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:6px 8px;background:#fff;font-size:11px;color:#6B7280;">Timer(1s) 触发</div>
+      <div style="color:#2E7DA6;font-size:12px;">→</div>
+      <div style="flex:1 1 130px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:6px 8px;background:#fff;font-size:11px;color:#6B7280;">采集快照（CPU/内存/磁盘/网络/GPU/进程）</div>
+      <div style="color:#2E7DA6;font-size:12px;">→</div>
+      <div style="flex:1 1 130px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:6px 8px;background:#fff;font-size:11px;color:#6B7280;">ResourceSnapshot 入环形缓冲(60帧)</div>
+      <div style="color:#2E7DA6;font-size:12px;">→</div>
+      <div style="flex:1 1 130px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:6px 8px;background:#fff;font-size:11px;color:#6B7280;">UI 更新仪表盘 + 趋势曲线</div>
+    </div>
+  </div>
+
+  <!-- C. 硬件采集来源 -->
+  <div style="border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:12px 14px;background:rgba(0,0,0,0.02);margin-top:12px;">
+    <div style="font-size:12px;font-weight:600;color:#2E7DA6;margin-bottom:8px;">C · 各硬件/资源的数据来源（WMI 类 / API）</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">处理器</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">Win32_Processor</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">主板/BIOS</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">Win32_BaseBoard / _BIOS</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">显卡</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">Win32_VideoController</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">内存条</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">Win32_PhysicalMemory</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">硬盘/分区</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">Win32_DiskDrive / _LogicalDisk</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">网卡</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">Win32_NetworkAdapter</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">CPU/内存占用</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">GetSystemTimes / GlobalMemoryStatusEx</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">磁盘/网络 I/O 速率</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">GetDiskFreeSpaceEx / GetIfEntry2 / PDH</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">温度/电压/风扇</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">LibreHardwareMonitor 库</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">GPU 利用率/显存</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">NVML / ADL / DXGI</div>
+      </div>
+      <div style="flex:1 1 150px;min-width:0;border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px;background:#fff;">
+        <div style="font-size:11px;font-weight:600;">进程列表</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px;">Toolhelp32 Snapshot</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</html>
